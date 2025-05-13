@@ -1,0 +1,76 @@
+{
+  "orders": [
+    {
+      "order_id": 5001,
+      "customer_id": "C201",
+      "order_time": "2025-05-09T15:10:00",
+      "status": "Completed",
+      "total": 28.00
+    },
+    {
+      "order_id": 5002,
+      "customer_id": "C102",
+      "order_time": "2025-05-09T15:20:30",
+      "status": "In Progress",
+      "total": 30.00
+    },
+    {
+      "order_id": 5003,
+      "customer_id": "C103",
+      "order_time": "2025-05-09T15:45:12",
+      "status": "Completed",
+      "total": 30.00
+    },
+    {
+      "order_id": 5004,
+      "customer_id": "C104",
+      "order_time": "2025-05-09T16:00:00",
+      "status": "Cancelled",
+      "total": 14.00
+    }
+  ],
+  "order_items": [
+    {
+      "order_id": 5001,
+      "dish_id": 1001,
+      "quantity": 1,
+      "unit_price": 18.00
+    },
+    {
+      "order_id": 5001,
+      "dish_id": 1009,
+      "quantity": 2,
+      "unit_price": 5.00
+    },
+    {
+      "order_id": 5002,
+      "dish_id": 1002,
+      "quantity": 1,
+      "unit_price": 12.00
+    },
+    {
+      "order_id": 5002,
+      "dish_id": 1006,
+      "quantity": 3,
+      "unit_price": 6.00
+    },
+    {
+      "order_id": 5003,
+      "dish_id": 1005,
+      "quantity": 2,
+      "unit_price": 13.00
+    },
+    {
+      "order_id": 5003,
+      "dish_id": 1010,
+      "quantity": 1,
+      "unit_price": 4.00
+    },
+    {
+      "order_id": 5004,
+      "dish_id": 1004,
+      "quantity": 1,
+      "unit_price": 14.00
+    }
+  ]
+}
