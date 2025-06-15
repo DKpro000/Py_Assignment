@@ -1,4 +1,0 @@
-data = {
-  "orders": [],
-  "order_items": []
-}
