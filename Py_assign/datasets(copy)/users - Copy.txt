@@ -1,7 +1,0 @@
-{
-    "users": [{
-      "role": "manager",
-      "accID": "Admin",
-      "pass": "Admin"
-    }]
-}
