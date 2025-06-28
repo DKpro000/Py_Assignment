@@ -89,7 +89,7 @@ class Customer():
                     "dish_id": dish_id,
                     "rating": rating,
                     "comment": comment,
-                    "time": datetime.datetime.now().isoformat()
+                    "time": datetime.now().isoformat()
                 })
                 self.system.write_feedback(self, fk)
 
@@ -132,7 +132,7 @@ class Customer():
                         if new_name:
                             user['accID'] = new_name
                         self.system.write_users(self, users_available)
-                        messagebox.showinfo(message=f"password updated")
+                        messagebox.showinfo(message=f"Username updated")
                         self.acc = new_name
                         customer_interface(app,MainWindow,self.acc, self.pas)
 
