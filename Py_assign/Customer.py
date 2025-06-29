@@ -63,18 +63,16 @@ class Customer():
         comment_entry = Text(popup, height=4, width=30)
         comment_entry.grid(row=4, column=1)
 
-        #opening the feedback file
         f_data = self.get_item()
         fk = f_data['feedback']
 
-        #inserting the review
         def addNewComment():
             try:
                 dish_name = dish_name_entry.get().title()
                 rating = int(rating_entry.get())
                 comment = comment_entry.get("1.0", END).strip()
                 dish_id = ""
-                # for dish_id we need to use dis_name to find it
+
                 self.menu = f_data['menu']
                 for items in self.menu["menu_items"]:
                     if items["name"] == dish_name:
@@ -98,13 +96,13 @@ class Customer():
             except Exception as e:
                 messagebox.showerror(message=f"Failed to add comment.\nError: {e}")
 
-        #submit button
+
         Button(popup, text="Add New Comment", command=addNewComment).grid(row=5, column=1, pady=10)
 
 
 
     def userProfile(self, customer_window,app,MainWindow):
-        # Destroy all widgets
+
         for widget in customer_window.winfo_children():
             widget.destroy()
 
@@ -169,7 +167,6 @@ class Customer():
         for i in range(3):
             ProfileFrame.grid_columnconfigure(i, weight=1)
 
-        #creating the review tabs
         ReviewFrame = Frame(customer_window,bg="#729cd4")
         ReviewFrame.pack(fill="both", expand=True)
         Button(ReviewFrame, text="add new review", command=lambda:self.reviews(ReviewFrame)).pack()
@@ -181,7 +178,7 @@ class Customer():
             if fb['customer_id'] == self.acc:
                 tempFeedbackList.append(fb['feedback_id'])
                 tempFeedbackList.append(fb['customer_id'])
-                #converting the dish id into name
+
                 menu = f_data['menu']
                 for item in menu["menu_items"]:
                     if item['dish_id'] == fb['dish_id']:
@@ -191,7 +188,7 @@ class Customer():
                 tempFeedbackList.append(fb.get('time') or fb.get('Time', 'N/A'))
         TableCreator(ReviewFrame, "Feedbacks", ("ID", "CustomerID", "DishID", "Rating", "Comment", "Time"),
                      tempFeedbackList)
-        #back button
+
         bottom_btn_frame = Frame(ReviewFrame,bg="#729cd4")
         bottom_btn_frame.pack(pady=10)
 
@@ -203,21 +200,18 @@ class Customer():
 
     def checkIngredientRequired(self, name):
 
-        # Get required datasets
-        f_data = self.get_item()  # From menu.txt
+        f_data = self.get_item()
 
         self.menu = f_data['menu']
         inventory = f_data['inventory']
         ingredients = inventory['ingredients']
         recipes = inventory['recipes']
 
-        # Step 1: Find the dish ID by name
         dishID = next((item['dish_id'] for item in self.menu["menu_items"] if item['name'] == name), None)
         if dishID is None:
             print(f"Dish '{name}' not found in menu.")
             return False
 
-        # Step 2: Get required ingredients for the dish
         for recipe in recipes:
             if recipe['dish_id'] == dishID:
                 for ing in recipe['ingredients']:
@@ -229,7 +223,6 @@ class Customer():
             print(f"No recipe found for dish ID {dishID}.")
             return False
 
-        # Step 3: Check stock levels
         ingredient_lookup = {ing['ingredient_id']: ing for ing in ingredients}
         for ing_id, required_qty in self.totalIngredients.items():
             if ing_id not in ingredient_lookup:
@@ -248,7 +241,7 @@ class Customer():
         for ing_id, qty in self.totalIngredients.items():
             name = ingredient_lookup[ing_id]['name']
             print(f"- {name}: {qty}")
-        return True  # All ingredients are available
+        return True
 
     def sendInOrder(self):
         f_data = self.get_item()
@@ -256,7 +249,7 @@ class Customer():
         self.orders = f_data['order']
 
         try:
-            # this makes it so that we are able to know how many of one item is in the cart
+
             name_list = [tuple(item) for item in self.cart]
             counts = Counter(name_list)
 
@@ -301,14 +294,13 @@ class Customer():
         except Exception as e:
             messagebox.showerror(message=f"Order submission failed:\n{e}")
     def shoppingCart(self, customer_window, app, MainWindow):
-        # Destroy all widgets in customer window first
+
         for widget in customer_window.winfo_children():
             widget.destroy()
 
         row_index = 1
-        self.total_label = None  # Reset reference to destroyed label
+        self.total_label = None
 
-        # Full-size shopping frame
         shoppingFrame = Frame(customer_window,bg="#729cd3")
         shoppingFrame.pack(fill="both", expand=True)
 
@@ -317,30 +309,25 @@ class Customer():
         name_to_price = {item[0]: item[1] for item in self.cart}
 
         if not name_counts:
-            # ❗️Show centered "Cart is empty"
             empty_label = Label(
                 shoppingFrame,
                 text="Cart is empty.",
                 font=("Arial", 20, "bold"),bg="#729cd4"
             )
             empty_label.place(relx=0.5, rely=0.5, anchor="center")
-            # ⬅️ Back button at bottom right
             Button(
                 shoppingFrame,
                 text='Back',
                 command=lambda: customer_interface(app, MainWindow, self.acc, self.pas)
             ).place(relx=1, rely=1, anchor="se", x=-10, y=-10)
         else:
-            # 🧾 Table headers
             headers = ["Item Name", "Quantity", "Price per Unit"]
             for i, header in enumerate(headers):
                 Label(shoppingFrame, text=header, font=("Arial", 14, "bold")).grid(row=0, column=i, padx=10, pady=5,
                                                                                    sticky="nsew")
 
-            # 🧾 Colors for alternating rows
             row_colors = ["#FFFFFF", "#F0F0F0"]
 
-            # 🧾 Items
             for row_index, (item_name, count) in enumerate(name_counts.items(), start=1):
                 item_price = name_to_price[item_name]
                 bg_color = row_colors[row_index % 2]
@@ -352,31 +339,27 @@ class Customer():
                 Label(shoppingFrame, text=f"${item_price:.2f}", bg=bg_color).grid(row=row_index, column=2, padx=10,
                                                                                   pady=5, sticky="nsew")
 
-            # 💰 Total
             total = sum(name_to_price[name] * count for name, count in name_counts.items())
             self.total_label = Label(shoppingFrame, text=f"Total: ${total:.2f}", font=("Arial", 14, "bold"))
             self.total_label.grid(row=row_index + 1, column=0, columnspan=3, sticky="e", padx=10, pady=(10, 0))
 
-            # 🧱 Grid column weight for expansion
+
             for col in range(3):
                 shoppingFrame.grid_columnconfigure(col, weight=1)
             for r in range(row_index + 2):
                 shoppingFrame.grid_rowconfigure(r, weight=1)
 
-            row_index += 2  # Adjust for button
+            row_index += 2
 
-            # ⬅️ Back button at bottom right
             Button(
                 shoppingFrame,
                 text='Back',
                 command=lambda: customer_interface(app, MainWindow, self.acc, self.pas)
             ).grid(row=row_index + 1, column=2, sticky="e", padx=10, pady=15)
-            #another button to to send in the order
             Button(shoppingFrame, text='place order', command=self.sendInOrder).grid(row=row_index + 2, column=2, sticky="e", padx=10, pady=15)
 
 
     def checkIngredientRollback(self, name):
-        # Use the existing in-memory menu and inventory
         f_data = self.get_item()
         menu_items = f_data['menu']['menu_items']
         ingredients = f_data['inventory']['ingredients']
@@ -395,24 +378,20 @@ class Customer():
                     ing_id = ing['ingredient_id']
                     qty = ing['quantity']
 
-                    # Add back to stock (if you're using this)
                     if ing_id in ingredient_lookup:
                         ingredient_lookup[ing_id]['stock'] += qty
 
-                    # Subtract from total used
                     if ing_id in self.totalIngredients:
                         self.totalIngredients[ing_id] -= qty
                         if self.totalIngredients[ing_id] < 0:
-                            self.totalIngredients[ing_id] = 0  # Avoid negative values
+                            self.totalIngredients[ing_id] = 0
                     else:
-                        # Should not happen, but guard against it
                         self.totalIngredients[ing_id] = 0
                 break
         else:
             print(f"No recipe found for dish ID {dishID}.")
             return False
 
-        # Print updated ingredient usage
         print("Updated total ingredients used after rollback:")
         for ing_id, qty in self.totalIngredients.items():
             ing_name = ingredient_lookup.get(ing_id, {}).get('name', f'ID {ing_id}')
@@ -427,7 +406,6 @@ class Customer():
         frame = Frame(innerFrame, bg="#fff5ec")
         frame.pack(fill="both", expand=True)
 
-        # Load image
         if os.path.exists(image_path):
             try:
                 img = PhotoImage(file=image_path)
@@ -438,10 +416,8 @@ class Customer():
         else:
             Label(frame, text="Image not found", bg="#fff5ec").pack()
 
-        # Dish label
         Label(frame, text=f"{dish}\n${price:.2f}", font=("Times New Roman", 10, "bold"), bg="#fff5ec").pack()
 
-        # Quantity controls
         qty_frame = Frame(frame, bg="#fff5ec")
         qty_frame.pack()
 
@@ -452,7 +428,7 @@ class Customer():
         def increase():
             print("increasing")
             if not self.checkIngredientRequired(dish):
-                return  # Do not proceed if ingredients are insufficient
+                return
             self.dish_quantities[dish] += 1
             qty_var.set(str(self.dish_quantities[dish]))
             self.cart.append([dish, price])
@@ -469,7 +445,6 @@ class Customer():
                         del self.cart[i]
                         break
 
-                # Restore ingredients
                 self.checkIngredientRollback(dish)
 
         Button(qty_frame, text="-", command=decrease, width=2).pack(side="left", padx=2)
@@ -483,8 +458,6 @@ class Customer():
 
 
 def customer_interface(app,MainWindow,acc, pas):
-    #creating window
-
 
     f_data = app.get_item()
     menu = f_data['menu']
@@ -492,8 +465,6 @@ def customer_interface(app,MainWindow,acc, pas):
     app.acc = acc
     app.pas = pas
 
-    #main menu
-    # creating header
     if app.does_window_exist == False:
         app.window = Toplevel(MainWindow)
         app.window.attributes('-fullscreen', True)
@@ -505,8 +476,7 @@ def customer_interface(app,MainWindow,acc, pas):
     header_frame = Frame(app.window, bg="#ccc")
     header_frame.pack(fill="x")
 
-    # Configure columns: 0 = Home, 1 = spacer, 2 = Cart, 3 = Profile
-    header_frame.grid_columnconfigure(0, weight=1)  # Home takes most space
+    header_frame.grid_columnconfigure(0, weight=1)
     header_frame.grid_columnconfigure(1, weight=1)
     header_frame.grid_columnconfigure(2, weight=0)
     header_frame.grid_columnconfigure(3, weight=0)
@@ -524,7 +494,6 @@ def customer_interface(app,MainWindow,acc, pas):
 
     app.notebook = ttk.Notebook(app.window)
     tab = Frame(app.notebook)
-    # making a scollbar
     app.my_canvas = Canvas(tab)
     app.my_canvas.pack(side=LEFT, fill="both", expand=True)
     app.scrollBar(app.my_canvas, tab)
@@ -550,7 +519,6 @@ def customer_interface(app,MainWindow,acc, pas):
         menu_by_category[item.get("category", "Unknown")].append(
             (item.get("name", "Unknown"), item.get("image", ""), item.get("price", 0))
         )
-    # printing out the main menu
     for category, items_list in menu_by_category.items():
         category_label = Label(app.scrollable_frame, text=category, font=("Showcard Gothic", 20, "bold"),
                                anchor="w", bg="#729cd4", fg="#fff5ec")
@@ -570,7 +538,6 @@ def customer_interface(app,MainWindow,acc, pas):
 
     for i in range(cols):
         app.scrollable_frame.grid_columnconfigure(i, weight=1)
-    # now to make tabs that only contains the items of a certain category
     subCols = 3
     for category, items_list in menu_by_category.items():
         subTab = ttk.Frame(app.notebook)
