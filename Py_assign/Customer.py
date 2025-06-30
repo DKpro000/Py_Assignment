@@ -178,11 +178,7 @@ class Customer():
             if fb['customer_id'] == self.acc:
                 tempFeedbackList.append(fb['feedback_id'])
                 tempFeedbackList.append(fb['customer_id'])
-
-                menu = f_data['menu']
-                for item in menu["menu_items"]:
-                    if item['dish_id'] == fb['dish_id']:
-                        tempFeedbackList.append(item['name'])
+                tempFeedbackList.append(fb['dish_id'])
                 tempFeedbackList.append(fb['rating'])
                 tempFeedbackList.append(fb['comment'])
                 tempFeedbackList.append(fb.get('time') or fb.get('Time', 'N/A'))
