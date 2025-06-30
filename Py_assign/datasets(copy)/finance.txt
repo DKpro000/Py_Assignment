@@ -1,0 +1,28 @@
+{
+  "transactions": [
+    {
+      "transaction_id": 6001,
+      "order_id": 5001,
+      "cashier_id": "E001",
+      "payment_method": "Cash",
+      "amount": 28.00,
+      "time": "2025-05-09T15:12:00"
+    },
+    {
+      "transaction_id": 6002,
+      "order_id": 5002,
+      "cashier_id": "E002",
+      "payment_method": "Credit Card",
+      "amount": 30.00,
+      "time": "2025-05-09T15:22:00"
+    },
+    {
+      "transaction_id": 6003,
+      "order_id": 5003,
+      "cashier_id": "E001",
+      "payment_method": "Mobile Payment",
+      "amount": 30.00,
+      "time": "2025-05-09T15:46:00"
+    }
+  ]
+}
