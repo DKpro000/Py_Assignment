@@ -30,17 +30,24 @@ class Chef:
         decrypted = pseudo_decrypt(encrypted_message, self.shared_key)
         decrypted = str_to_json(decrypted)
         return decrypted
+    
+    def check_num(self, num):
+        try:
+            int(num)
+        except ValueError:
+            messagebox.showwarning("Invalid", "Invalid Input")
+            return False
+        return True
 
     def recipe_management(self):
         window_recipe = tk.Toplevel()
         window_recipe.title("Recipe Management")
-        window_recipe.geometry("400x500")
         
-        button1 = tk.Button(window_recipe, text="Create Recipe", command=lambda: self.create_rcp1())
+        button1 = tk.Button(window_recipe, text="Create Recipe", command=self.create_rcp1, width=12, height=3)
         button1.grid(row=0, column=0)
-        button2 = tk.Button(window_recipe, text="Update Recipe", command=lambda: self.update_rcp())
+        button2 = tk.Button(window_recipe, text="Update Recipe", command=self.update_rcp, width=12, height=3)
         button2.grid(row=0, column=1)
-        button3 = tk.Button(window_recipe, text="Delete Recipe", command=lambda: self.delete_rcp1())
+        button3 = tk.Button(window_recipe, text="Delete Recipe", command=self.delete_rcp1, width=12, height=3)
         button3.grid(row=0, column=2)
 
     def create_rcp1(self):
@@ -69,16 +76,18 @@ class Chef:
         label4.grid(row=3, column=0)
         num = tk.Entry(window)
         num.grid(row=3, column=1)
-        button1 = tk.Button(window, text="Next", command=lambda: self.create_rcp2(new_id, name.get(), category.get(), round(float(price.get()), 2), int(num.get())))
+        button1 = tk.Button(window, text="Next", command=lambda: self.create_rcp2(new_id, name.get(), category.get(), price.get(), num.get()))
         button1.grid(row=4)
 
     def create_rcp2(self, new_id, name, category, price, num):
-        menu = self.get_item()["menu"]
+        status_price = self.check_num(price)
+        status_num = self.check_num(num)
 
-        new_menu = {"dish_id": new_id, "name": name, "image": None, "category": category, "price": price}
-        menu["menu_items"].append(new_menu)
+        if status_price == False or status_num == False:
+            return
 
-        self.system.chf_write_menu(self, menu)
+        price = round(float(price), 2)
+        num = int(num)
         
         window = tk.Toplevel()
         window.title("Create Recipe")
@@ -110,6 +119,13 @@ class Chef:
         
         new_id = ing["recipes"][-1]["dish_id"]+1
         new_ing = []
+
+        menu = self.get_item()["menu"]
+
+        new_menu = {"dish_id": new_id, "name": name, "image": None}
+        menu["menu_items"].append(new_menu)
+
+        self.system.chf_write_menu(self, menu)
 
         for i in range(len(entry_ls)):
             temp_ing = {}
@@ -189,44 +205,8 @@ class Chef:
 
     def del_get_ing(self, name, entry_ls, quantity_ls, window):
         self.delete_rcp2(name)
-        menu = self.get_item()["menu"]
-        dish_id = None
-        for item in menu["menu_items"]:
-            if item["name"] == name:
-                dish_id = item["dish_id"]
-                break
-        
-        if dish_id:
-            self.create_recipe_ingredients(dish_id, name, entry_ls, quantity_ls, window)
-
-    def create_recipe_ingredients(self, dish_id, name, entry_ls, quantity_ls, window):
-        ing = self.get_item()["ingr"]
-        new_ing = []
-
-        for i in range(len(entry_ls)):
-            temp_ing = {}
-
-            valid = False
-            for j in ing["ingredients"]:
-                if j["name"] == entry_ls[i].get():
-                    id = j["ingredient_id"]
-                    valid = True
-                    break
-            
-            if valid == False:
-                messagebox.showerror("Not Found", f"{entry_ls[i].get()} is not found.")
-                return
-
-            temp_ing["ingredient_id"] = id
-            temp_ing["quantity"] = quantity_ls[i].get()
-            new_ing.append(temp_ing)
-        
-        new_rcp = {"dish_id": dish_id, "ingredients": new_ing}
-        ing["recipes"].append(new_rcp)
-
-        self.system.chf_write_ing(self, ing)
+        self.get_ing(name, entry_ls, quantity_ls, window)
         messagebox.showinfo("Updated", f"{name} has been updated.")
-        window.destroy()
 
     def delete_rcp1(self):
         window = tk.Toplevel()
@@ -234,10 +214,10 @@ class Chef:
 
         label = tk.Label(window, text="Enter Recipe Name: ")
         label.grid(row=0, column=0)
-        entry = tk.Entry(window)
-        entry.grid(row=0, column=1)
+        name_entry = tk.Entry(window)
+        name_entry.grid(row=0, column=1)
 
-        button = tk.Button(window, text="Delete", command=lambda: self.delete_rcp2(entry.get()))
+        button = tk.Button(window, text="Delete", command=lambda: self.delete_rcp2(name_entry.get()))
         button.grid(row=1)
 
     def delete_rcp2(self, name):
@@ -275,13 +255,13 @@ class Chef:
         window_inv.geometry("900x500")
         window_inv.focus()
 
-        search_bar = tk.Entry(window_inv, width=30)
-        search_bar.grid(row=0, column=0)
+        search_bar_entry = tk.Entry(window_inv, width=30)
+        search_bar_entry.grid(row=0, column=0)
         
         search_img = PhotoImage(file=("picture\\search.png"))
-        search_button = tk.Button(window_inv, command=lambda: self.find_ing(window_inv, search_bar), image=search_img)
+        search_button = tk.Button(window_inv, command=lambda: self.find_ing(window_inv, search_bar_entry, canva), image=search_img)
         search_button.image = search_img
-        search_button.place(x=550, y=100)
+        search_button.place(x=550, y=0)
         
         canva = tk.Canvas(window_inv)
         scrollbar = tk.Scrollbar(window_inv, orient="vertical", command=canva.yview)
@@ -421,11 +401,9 @@ class Chef:
         ing30.image = ing30_img
         ing30.grid(row=10, column=3)
 
-    def find_ing(self, window, search_bar):
-        for widget in window.winfo_children():
-            if isinstance(widget, tk.Button) and widget.cget("text") not in ["Search"]:
-                widget.destroy()
-        
+    def find_ing(self, window, search_bar, canva):
+        canva.destroy()
+                
         name = search_bar.get()
         ing = self.get_item()["ingr"]
 
@@ -433,7 +411,7 @@ class Chef:
         for i in ing["ingredients"]:
             if name == i["name"]:
                 result_img = PhotoImage(file=f"picture\\{name}.png")
-                result = tk.Button(window, command=lambda: self.verify(i["name"]), image=result_img)
+                result = tk.Button(window, command=lambda: self.verify(window, i["name"]), image=result_img)
                 result.image = result_img
                 result.grid(row=1, column=0, pady=20)
                 ing_valid = True
@@ -443,7 +421,7 @@ class Chef:
             label = tk.Label(window, text="Ingredient Not Found", font=("Arial", 12))
             label.grid(row=1, column=0, pady=120)
 
-    def verify(self, windows11, name):
+    def verify(self, window, name):
         ing = self.get_item()["ingr"]
 
         for i in ing["ingredients"]:
@@ -457,7 +435,7 @@ class Chef:
                 break
         
         messagebox.showinfo(name, f"{name} is {availability}, {quantity} {unit} left")
-        windows11.focus()
+        window.focus()
 
     def equipment_management(self):
         window_eqp = tk.Toplevel()
@@ -477,16 +455,16 @@ class Chef:
         dropdown = tk.OptionMenu(window_eqp, status, *status_ls)
         dropdown.grid(row=1, column=1, padx=10)
 
-        button1 = tk.Button(window_eqp, text="View Checklist", command=lambda: self.checkls())
+        button1 = tk.Button(window_eqp, text="View Checklist", command=self.checkls)
         button1.grid(row=2, column=0, pady=20)
 
         button2 = tk.Button(window_eqp, text="Add Report", command=lambda: self.record_eqp(entry1, status))
         button2.grid(row=2, column=1, pady=20)
         
-        button3 = tk.Button(window_eqp, text="Remove Equipment", command=lambda: self.remove_equipment())
+        button3 = tk.Button(window_eqp, text="Remove Equipment", command=self.remove_eqp)
         button3.grid(row=2, column=2, pady=20)
 
-        button4 = tk.Button(window_eqp, text="Exit", command=lambda: window_eqp.destroy())
+        button4 = tk.Button(window_eqp, text="Exit", command=window_eqp.destroy)
         button4.grid(row=3, column=1, pady=10)
 
     def checkls(self):
@@ -520,15 +498,13 @@ class Chef:
         button_frame = tk.Frame(window)
         button_frame.pack(pady=10)
         
-        remove_button = tk.Button(button_frame, text="Remove Selected", 
-                                command=lambda: self.remove_selected_equipment(table, window))
+        remove_button = tk.Button(button_frame, text="Remove Selected", command=lambda: self.remove_selected_eqp(table))
         remove_button.pack(side=tk.LEFT, padx=5)
         
-        refresh_button = tk.Button(button_frame, text="Refresh", 
-                                 command=lambda: self.refresh_checklist(table))
+        refresh_button = tk.Button(button_frame, text="Refresh", command=lambda: self.refresh_checklist(table))
         refresh_button.pack(side=tk.LEFT, padx=5)
 
-    def remove_equipment(self):
+    def remove_eqp(self):
         window = tk.Toplevel()
         window.title("Remove Equipment")
         window.geometry("300x150")
@@ -539,14 +515,13 @@ class Chef:
         entry = tk.Entry(window, width=25)
         entry.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
         
-        remove_button = tk.Button(window, text="Remove", 
-                                command=lambda: self.remove_equipment_by_name(entry.get(), window))
+        remove_button = tk.Button(window, text="Remove", command=lambda: self.remove_eqp_by_name(entry.get(), window))
         remove_button.grid(row=2, column=0, padx=5, pady=10)
         
         cancel_button = tk.Button(window, text="Cancel", command=window.destroy)
         cancel_button.grid(row=2, column=1, padx=5, pady=10)
 
-    def remove_selected_equipment(self, table, parent_window):
+    def remove_selected_eqp(self, table):
         selection = table.selection()
         if not selection:
             messagebox.showwarning("No Selection", "Please select an item to remove.")
@@ -555,14 +530,10 @@ class Chef:
         item = table.item(selection[0])
         equipment_name = item['values'][0]
         
-        result = messagebox.askyesno("Confirm Removal", 
-                                   f"Are you sure you want to remove '{equipment_name}' from the checklist?")
-        
-        if result:
-            self.remove_equipment_by_name(equipment_name, None)
-            self.refresh_checklist(table)
+        self.remove_eqp_by_name(equipment_name, None)
+        self.refresh_checklist(table)
 
-    def remove_equipment_by_name(self, equipment_name, window):
+    def remove_eqp_by_name(self, equipment_name, window):
         if not equipment_name.strip():
             messagebox.showerror("Error", "Please enter an equipment name.")
             return
@@ -583,6 +554,7 @@ class Chef:
                 window.destroy()
         else:
             messagebox.showerror("Not Found", f"Equipment '{equipment_name}' not found in the checklist.")
+        
 
     def refresh_checklist(self, table):
         for item in table.get_children():
@@ -635,8 +607,8 @@ class Chef:
         entry.delete(0, tk.END)
         status.set("Select Status")
 
-    def list_pending_orders(self, ManagerWindow):
-        pending_order_Window = Toplevel(ManagerWindow)
+    def list_pending_orders(self, window):
+        pending_order_Window = Toplevel(window)
         pending_order_Frame = Frame(pending_order_Window)
         pending_order_Frame.pack(padx=10, pady=10, fill="both", expand=True)
 
@@ -723,26 +695,25 @@ class Chef:
 def chef_interface(chf, MainWindow):
     window1 = Toplevel(MainWindow)
     window1.title("Chef")
-    window1.geometry("800x400")
     window1.attributes('-fullscreen', True)
 
     label1 = Label(window1, text = "CHEF INTERFACE")
-    label1.grid(row=0, column=1)
+    label1.place(y=3 ,relx=0.5, anchor='center')
 
-    button1 = Button(window1, text = "Recipe Management", command=lambda: chf.recipe_management(), width=20, height=5)
+    button1 = Button(window1, text = "Recipe Management", command=lambda: chf.recipe_management(), width=20, height=15)
     button1.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
-    button2 = Button(window1, text = "Inventory Check", command=lambda: chf.inventory_check(), width=20, height=5)
+    button2 = Button(window1, text = "Inventory Check", command=lambda: chf.inventory_check(), width=20, height=15)
     button2.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
-    button3 = Button(window1, text = "Equipment Management", command=lambda: chf.equipment_management(), width=20, height=5)
+    button3 = Button(window1, text = "Equipment Management", command=lambda: chf.equipment_management(), width=20, height=15)
     button3.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
 
-    button4 = Button(window1, text="Orders", command=lambda: chf.list_pending_orders(window1))
+    button4 = Button(window1, text="Orders", command=lambda: chf.list_pending_orders(window1), width=20, height=15)
     button4.grid(row=1, column=3, padx=10, pady=10, sticky="nsew")
 
-    button5 = Button(window1, text="Logout", command=window1.destroy)
-    button5.grid(row=2, column=1, padx=10, pady=10)
+    button5 = Button(window1, text="Logout", command=window1.destroy, width=10, height=3)
+    button5.grid(row=2, column=3, pady=10)
 
-    for i in range(3):
+    for i in range(4):
             window1.grid_columnconfigure(i, weight=1)
