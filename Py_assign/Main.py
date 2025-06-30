@@ -77,16 +77,7 @@ class system_manager:
             if user["accID"] == accID and user["pass"] == password:
                 return True, user['role']
         return False, None
-        
-    #Manager
-    def manager_only(method):
-        def wrapper(self, requester, *args, **kwargs):
-            if requester.__class__.__name__ == 'Manager':
-                return method(self, requester, *args, **kwargs)
-            print(f"Permission denied: {method.__name__} requires Manager role.")
-        return wrapper
 
-    @manager_only
     def write_mn_users(self, users_dict):
         latest = self.data_banker.get_users()
         users_list = latest.get('users', [])
@@ -96,6 +87,14 @@ class system_manager:
         write(latest, 'datasets/users.txt')
         self.users_available = latest
         self._plain_data[Manager]['user'] = latest
+        
+    #Manager
+    def manager_only(method):
+        def wrapper(self, requester, *args, **kwargs):
+            if requester.__class__.__name__ == 'Manager':
+                return method(self, requester, *args, **kwargs)
+            print(f"Permission denied: {method.__name__} requires Manager role.")
+        return wrapper
 
     @manager_only
     def write_mng_orders(self, requester, orders_dict):
@@ -162,7 +161,7 @@ class system_manager:
         self._plain_data[Manager]['order'] = order_dict
 
     @customer_only
-    def write_users(self, requester, users_dict):
+    def write_cs_users(self, requester, users_dict):
         write(users_dict, 'datasets/users.txt')
         self._plain_data[Customer]['user'] = users_dict
         self.users_available = users_dict
@@ -252,7 +251,7 @@ while True:
     elif choice == '2':
         result = LogInInfo(MainWindow)
         if result is None:
-            continue  # Back was pressed
+            continue
         acc, pas = result
         ok, role = system.login(acc, pas)
         if not ok:
@@ -261,18 +260,14 @@ while True:
         messagebox.showinfo(message=f"Login successful, role: {role.capitalize()}")
         if role == 'manager':
             sys = system_manager()
-
-            # 2. 再创建 Manager，并传入同一个 system 实例
             mgr = Manager(sys, pnl)
 
-            # 3. 交换密钥
             sys_pub = sys.exchange_public_key()
             mgr_pub = mgr.exchange_public_key()
 
             mgr.receive_public_key(sys_pub)
             sys.receive_public_key(mgr_pub)
 
-            # 4. 启动接口
             manager_interface(mgr, MainWindow)
         elif role.lower() == 'cashier':
             sys = system_manager()
@@ -299,18 +294,15 @@ while True:
 
             chef_interface(chf,MainWindow)
         elif role.lower() == 'customer':
-            # Initialize system manager and customer
             sys_cus = system_manager()
             customer = Customer(sys_cus, pnl)
 
-            # Exchange public keys
             system_pub_key = sys_cus.exchange_public_key()
             customer_pub_key = customer.exchange_public_key()
 
             sys_cus.receive_public_key(customer_pub_key)
             customer.receive_public_key(system_pub_key)
 
-            # Launch cashier interface with customer and main window
             customer_interface(customer, MainWindow,acc, pas)
         else:
             print("Unknown role, unable to enter the interface.")
